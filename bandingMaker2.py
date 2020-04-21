@@ -52,7 +52,7 @@ class Simuration():
 
     def sim_draw(self):
         self.line_simfft.set_data(self.fq_sq, self.sim_fqobj.fft_abs)
-        # self.line_simwave.set_data(self.x_data, self.sim_timeobj.wave)
+        self.line_simwave.set_data(self.x_data, self.sim_timeobj.wave)
         self.ax_sim_image.imshow(self.sim_timeobj.image(1), 'gray', vmin=0, vmax=255, aspect='auto')
 
     def set_frame(self):
