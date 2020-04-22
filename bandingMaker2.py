@@ -6,6 +6,7 @@ import numpy as np
 import imageanalyzer2
 import PySimpleGUI as sg
 
+
 class Simuration():
     def __init__(self, file, dt, isimage=True):
         self.file = file
@@ -44,6 +45,7 @@ class Simuration():
                                                linewidth=1, label='SIM')
         self.line_simfft, =  self.ax_fft.plot([], [], 'black',\
                                                linewidth=1, label='SIM')
+        self.ax_copy_image = self.ax_original_image
 
     def ref_draw(self):
         self.line_refwave.set_data(self.x_data, self.ref_timeobj.wave)
@@ -90,7 +92,7 @@ class Simuration():
                 self.x_a, self.y_a = event.xdata, event.ydata
                 self.area_image = True
             elif event.button == 2 or event.button == 3:
-                self.reselect_area()
+                self.patch.set_visible(not self.patch.get_visible())
                 self.fig.canvas.draw()
 
         elif event.inaxes == self.ax_fft:
@@ -111,17 +113,6 @@ class Simuration():
                 self.sim_draw()
                 self.fig.canvas.draw()
 
-    def reselect_area(self):
-        self.ax_original_image.cla()
-        self.set_original_image()
-        self.ax_ref_image.cla()
-        self.ax_sim_image.cla()
-        self.line_refwave.remove()
-        self.line_reffft.remove()
-        self.line_simwave.remove()
-        self.line_simfft.remove()
-        self.set_frame()
-
     def offclick(self, event):
         self.x_b, self.y_b = event.xdata, event.ydata
         if event.button == 1:
@@ -132,6 +123,17 @@ class Simuration():
             self.area_image = False
             self.area_fft = False
             self.fig.canvas.draw()
+
+    def reselect_area(self):
+        self.ax_original_image.cla()
+        self.set_original_image()
+        self.ax_ref_image.cla()
+        self.ax_sim_image.cla()
+        self.line_refwave.remove()
+        self.line_reffft.remove()
+        self.line_simwave.remove()
+        self.line_simfft.remove()
+        self.set_frame()
 
     def ref_setting(self):
         self.ax_original_image.cla()
@@ -148,8 +150,8 @@ class Simuration():
         end = int(max(self.x_a, self.x_b))
         left = int(min(self.y_a, self.y_b))
         right = int(max(self.y_a, self.y_b))
-        r = patches.Rectangle(xy=(top, left), width=(end-top), height=(right-left), fill=False)
-        self.ax_original_image.add_patch(r)
+        self.patch = patches.Rectangle(xy=(top, left), width=(end-top), height=(right-left), fill=False)
+        self.ax_original_image.add_patch(self.patch)
         self.trimmed_image = self.raw_image[top: end, left: right]
 
     def set_initial_wave(self):
@@ -189,7 +191,6 @@ class Simuration():
             self.set_original_image()
 
         else: pass
-
         RS_im = RectangleSelector(self.ax_original_image, self.onselect, drawtype='box', useblit=True)
         RS_fft = RectangleSelector(self.ax_fft,  self.onselect, drawtype='box', useblit=True)
         self.fig.canvas.mpl_connect('button_press_event', self.onclick)
