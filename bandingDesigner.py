@@ -25,8 +25,6 @@ class Simuration():
         self.fq_sq = self.ref_fqobj.fq_sq
         self.x_a, self.y_a, self.x_b, self.y_b = None, None, None, None
         self.filter = None
-        # self.area_image = False
-        # self.area_fft = False
         self.area = None     # or 'fft'
         self.set_fig()
         self.set_ax()
@@ -43,9 +41,9 @@ class Simuration():
         self.line_reffft, =  self.ax_fft.plot([], [], 'green',\
                                                linestyle="dashed", linewidth=0.5, label='ref')
         self.line_simwave, = self.ax_wave.plot([], [], 'black',\
-                                               linewidth=1, label='SIM')
+                                               linewidth=1, label='sim')
         self.line_simfft, =  self.ax_fft.plot([], [], 'black',\
-                                               linewidth=1, label='SIM')
+                                               linewidth=1, label='sim')
         self.ax_copy_image = self.ax_original_image
 
     def ref_draw(self):
@@ -62,7 +60,17 @@ class Simuration():
         self.ax_original_image.set_title('original image')
         self.ax_ref_image.set_title('ref image')
         # todo refactoring
-        self.ax_ref_image.spines["right"].set_color("g")
+
+        ref_spines = ['left', 'right', 'top', 'bottom']
+        for spine in ref_spines:
+            self.ax_ref_image.spines[spine].set_color("g")
+            self.ax_ref_image.spines[spine].set_linewidth(1)
+            self.ax_ref_image.spines[spine].set_linestyle("dashed")
+            self.ax_sim_image.spines[spine].set_color("black")
+            self.ax_sim_image.spines[spine].set_linewidth(2)
+
+
+
         self.ax_sim_image.set_title('sim image')
         self.ax_wave.grid(True)
         self.ax_fft.grid(True)
@@ -72,17 +80,6 @@ class Simuration():
         self.ax_fft.set_ylabel('amp')
         self.ax_wave.legend()
         self.ax_fft.legend()
-
-    def fft_filter(self, in_freq, out_freq, prop):
-        self.filter = np.ones(self.ref_timeobj.n)
-        if in_freq > out_freq:
-            tmp = in_freq
-            in_freq = out_freq
-            out_freq = tmp
-        # todo refactoring
-        self.filter[(self.fq_sq > in_freq) & (self.fq_sq < out_freq)] = prop
-        self.filter[(self.fq_sq > self.fq_sq[-1] - out_freq) & \
-                    (self.fq_sq < self.fq_sq[-1] - in_freq)] = prop
 
     def onselect(self, eclick, erelease):
         pass
@@ -159,16 +156,26 @@ class Simuration():
         self.ax_fft.set_ylim(0, self.amp_max)
 
     def fft_change(self):
-        prop = self.y_b / self.y_a
-        out_freq = max(self.x_a, self.x_b)
-        in_freq = min(self.x_a, self.x_b)
         self.pre_fft = self.sim_fqobj.fft
-        self.fft_filter(in_freq, out_freq, prop)
+        self.fft_filter()
         self.sim_fqobj.set_f(self.pre_fft * self.filter)
         self.sim_timeobj.set_wavedt(self.sim_fqobj.inv_wave(), dt)
         self.line_simwave.set_data(self.x_data, self.sim_timeobj.wave)
         self.line_simfft.set_data(self.fq_sq, self.sim_fqobj.fft_abs)
         self.ax_sim_image.imshow(self.sim_timeobj.image(1),'gray', vmin=0, vmax=255, aspect='auto')
+
+    def fft_filter(self):
+        prop = self.y_b / self.y_a
+        out_freq = max(self.x_a, self.x_b)
+        in_freq = min(self.x_a, self.x_b)
+        self.filter = np.ones(self.ref_timeobj.n)
+        if in_freq > out_freq:
+            tmp = in_freq
+            in_freq = out_freq
+            out_freq = tmp
+        self.filter[(self.fq_sq > in_freq) & (self.fq_sq < out_freq)] = prop
+        self.filter[(self.fq_sq > self.fq_sq[-1] - out_freq) & \
+                    (self.fq_sq < self.fq_sq[-1] - in_freq)] = prop
 
     def set_original_image(self):
         self.raw_image = cv2.imdecode(np.fromfile(self.file, np.uint8), 0)
