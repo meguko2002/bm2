@@ -124,17 +124,6 @@ class Simuration():
             self.area_fft = False
             self.fig.canvas.draw()
 
-    def reselect_area(self):
-        self.ax_original_image.cla()
-        self.set_original_image()
-        self.ax_ref_image.cla()
-        self.ax_sim_image.cla()
-        self.line_refwave.remove()
-        self.line_reffft.remove()
-        self.line_simwave.remove()
-        self.line_simfft.remove()
-        self.set_frame()
-
     def ref_setting(self):
         self.ax_original_image.cla()
         self.set_original_image()
