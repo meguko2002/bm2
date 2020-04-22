@@ -31,12 +31,9 @@ class Simuration ():
         self.set_frame ()
 
     def set_fig(self):
-        if self.isimage:
-            self.fig , (self.ax_original_data , self.ax_ref_image , self.ax_sim_image , \
-                        self.ax_wave , self.ax_fft) = plt.subplots ( nrows=5 , figsize=(8 , 8) )
-        else:
-            self.fig , (self.ax_original_data , self.ax_wave , self.ax_ref_image , self.ax_sim_image , \
-                        self.ax_fft) = plt.subplots ( nrows=5 , figsize=(8 , 8) )
+        self.fig , (self.ax_original_data , self.ax_ref_image , self.ax_sim_image , \
+                    self.ax_wave , self.ax_fft) = plt.subplots ( nrows=5 , figsize=(8 , 8) )
+
 
     def set_ax(self):
         self.line_refwave , = self.ax_wave.plot ( [] , [] , 'green' , \
@@ -141,7 +138,7 @@ class Simuration ():
 
     def set_initial_axis(self):
         self.ax_wave.set_xlim ( 0 , self.ref_timeobj.n * self.ref_timeobj.dt )
-        self.ax_wave.set_ylim ( 0 , 255 )
+        self.ax_wave.set_ylim (min(self.ref_wave)*0.9, max(self.ref_wave)*1.1)
         self.ax_fft.set_xlim ( 0 , self.f_range )
         self.ax_fft.set_ylim ( 0 , self.amp_max )
 
@@ -187,6 +184,9 @@ class Simuration ():
         dot_sq = np.arange(0, self.org_timeobj.n)
         self.line_origilal_wave , = self.ax_original_data.plot (dot_sq, self.org_timeobj.wave, 'black' , \
                                                                  linewidth=1 , label='origin' )
+        self.ax_original_data.grid ( True )
+        self.ax_original_data.set_ylim (min(self.org_timeobj.wave)*0.9, max(self.org_timeobj.wave)*1.1)
+        self.ax_original_data.set_ylabel ( 'L*' )
 
     def run(self):
         if self.isimage:
