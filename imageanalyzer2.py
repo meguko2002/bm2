@@ -12,11 +12,12 @@ class Time:
         self.dt = dt
         self.df = 1 / self.n / self.dt
 
-    def set_wave(self, wave):
+    def set_wave(self, wave, dt):
         self.wave = wave
         self.n = len(self.wave)
         self.mean = np.mean(self.wave)
         self.std = np.std(self.wave)
+        self.dt = dt
         self.df = 1 / self.n / self.dt
 
     def set_dt(self, dt):
@@ -29,7 +30,7 @@ class Time:
 
     @property
     def fft_abs(self):
-        return np.abs(self.fft) / self.n * 2
+         return np.abs(self.fft) / self.n * 2
 
     def image(self, width):
         image = np.tile(self.wave.astype(np.uint8), (width, 1))
