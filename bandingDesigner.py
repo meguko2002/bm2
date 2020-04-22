@@ -25,15 +25,18 @@ class Simuration ():
         self.fq_sq = self.ref_fqobj.fq_sq
         self.x_a , self.y_a , self.x_b , self.y_b = None , None , None , None
         self.filter = None
-        self.area = None  # or 'fft'
+        self.selected_area = None  # or 'fft'
         self.set_fig ()
         self.set_ax ()
         self.set_frame ()
-        # self.set_frame()
 
     def set_fig(self):
-        self.fig , (self.ax_original_data , self.ax_ref_image , self.ax_sim_image , \
-                    self.ax_wave , self.ax_fft) = plt.subplots ( nrows=5 , figsize=(8 , 8) )
+        if self.isimage:
+            self.fig , (self.ax_original_data , self.ax_ref_image , self.ax_sim_image , \
+                        self.ax_wave , self.ax_fft) = plt.subplots ( nrows=5 , figsize=(8 , 8) )
+        else:
+            self.fig , (self.ax_original_data , self.ax_wave , self.ax_ref_image , self.ax_sim_image , \
+                        self.ax_fft) = plt.subplots ( nrows=5 , figsize=(8 , 8) )
 
     def set_ax(self):
         self.line_refwave , = self.ax_wave.plot ( [] , [] , 'green' , \
@@ -71,7 +74,7 @@ class Simuration ():
         if event.inaxes == self.ax_original_data:
             if event.button == 1:
                 self.x_a , self.y_a = event.xdata , event.ydata
-                self.area = 'image'
+                self.selected_area = 'origin'
             elif event.button == 2 or event.button == 3:
                 self.patch.set_visible ( not self.patch.get_visible () )
                 self.fig.canvas.draw ()
@@ -79,7 +82,7 @@ class Simuration ():
         elif event.inaxes == self.ax_fft:
             if event.button == 1:
                 self.x_a , self.y_a = event.xdata , event.ydata
-                self.area = 'fft'
+                self.selected_area = 'fft'
             elif event.button == 2:  # reset
                 self.sim_timeobj.set_wavedt ( self.ref_wave , dt )
                 self.sim_fqobj.set_f ( self.ref_timeobj.fft )
@@ -97,31 +100,35 @@ class Simuration ():
     def offclick(self , event):
         self.x_b , self.y_b = event.xdata , event.ydata
         if event.button == 1:
-            if self.area == 'image' and event.inaxes == self.ax_original_data:
+            if self.selected_area == 'origin' and event.inaxes == self.ax_original_data:
                 self.ref_setting ()
-            elif self.area == 'fft' and event.inaxes == self.ax_fft:
+            elif self.selected_area == 'fft' and event.inaxes == self.ax_fft:
                 self.fft_change ()
-            self.area = None
+            self.selected_area = None
             self.fig.canvas.draw ()
 
     def ref_setting(self):
         self.ax_original_data.cla ()
-        self.set_original_image ()
-        self.trim_ref_image ()
-        self.ref_wave = np.mean ( self.trimmed_image , axis=1 )
+        if self.isimage:    self.set_original_image()
+        else:   self.set_original_wave()
+        self.trim_original_data()
         self.set_initial_wave ()
         self.ref_draw ()
         self.sim_draw ()
         self.set_initial_axis ()
 
-    def trim_ref_image(self):
+    def trim_original_data(self):
         top = int ( min ( self.x_a , self.x_b ) )
         end = int ( max ( self.x_a , self.x_b ) )
         left = int ( min ( self.y_a , self.y_b ) )
         right = int ( max ( self.y_a , self.y_b ) )
         self.patch = patches.Rectangle ( xy=(top , left) , width=(end - top) , height=(right - left) , fill=False )
         self.ax_original_data.add_patch ( self.patch )
-        self.trimmed_image = self.raw_image[top: end , left: right]
+        if self.isimage:
+            trimmed_image = self.raw_image[top: end , left: right]
+            self.ref_wave = np.mean ( trimmed_image , axis=1 )
+        else:
+            self.ref_wave = self.original_wave[top: end]
 
     def set_initial_wave(self):
         self.ref_timeobj.set_wavedt ( self.ref_wave , dt )
@@ -177,8 +184,10 @@ class Simuration ():
     def set_original_wave(self):
         self.original_wave = np.loadtxt ( 'sinwave.txt' , dtype='uint8' )
         self.org_timeobj = imageanalyzer2.Time ( wave=self.original_wave , dt=self.dt )
-        self.line_origilal_wave , = self.ax_original_data.plot (self.org_timeobj.t_sq, self.org_timeobj.wave, 'black' , \
+        dot_sq = np.arange(0, self.org_timeobj.n)
+        self.line_origilal_wave , = self.ax_original_data.plot (dot_sq, self.org_timeobj.wave, 'black' , \
                                                                  linewidth=1 , label='origin' )
+
     def run(self):
         if self.isimage:
             self.ax_original_data.set_title ( 'original image' )
@@ -197,5 +206,5 @@ class Simuration ():
 
 if __name__ == '__main__':
     dt = 0.0005
-    sim = Simuration ( ('ref.tif') , dt , isimage=0 )
+    sim = Simuration ( ('ref.tif') , dt , isimage=0)
     sim.run ()
