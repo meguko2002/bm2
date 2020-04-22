@@ -25,8 +25,9 @@ class Simuration():
         self.fq_sq = self.ref_fqobj.fq_sq
         self.x_a, self.y_a, self.x_b, self.y_b = None, None, None, None
         self.filter = None
-        self.area_image = False
-        self.area_fft = False
+        # self.area_image = False
+        # self.area_fft = False
+        self.area = None     # or 'fft'
         self.set_fig()
         self.set_ax()
         self.set_frame()
@@ -90,7 +91,7 @@ class Simuration():
         if event.inaxes == self.ax_original_image:
             if event.button == 1:
                 self.x_a, self.y_a = event.xdata, event.ydata
-                self.area_image = True
+                self.area = 'image'
             elif event.button == 2 or event.button == 3:
                 self.patch.set_visible(not self.patch.get_visible())
                 self.fig.canvas.draw()
@@ -98,7 +99,7 @@ class Simuration():
         elif event.inaxes == self.ax_fft:
             if event.button == 1:
                 self.x_a, self.y_a = event.xdata, event.ydata
-                self.area_fft = True
+                self.area = 'fft'
             elif event.button == 2:     # reset
                 self.sim_timeobj.set_wavedt(self.ref_wave, dt)
                 self.sim_fqobj.set_f(self.ref_timeobj.fft)
@@ -116,12 +117,11 @@ class Simuration():
     def offclick(self, event):
         self.x_b, self.y_b = event.xdata, event.ydata
         if event.button == 1:
-            if self.area_image and event.inaxes == self.ax_original_image:
+            if self.area == 'image' and event.inaxes == self.ax_original_image:
                 self.ref_setting()
-            elif self.area_fft and event.inaxes == self.ax_fft:
+            elif self.area == 'fft' and event.inaxes == self.ax_fft:
                 self.fft_change()
-            self.area_image = False
-            self.area_fft = False
+            self.area = None
             self.fig.canvas.draw()
 
     def ref_setting(self):
