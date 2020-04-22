@@ -15,10 +15,10 @@ class Simuration():
         self.f_range = 100
         self.amp_max = 5
         self.isimage = isimage
-        self.ref_timeobj = imageanalyzer2.Time(np.array([0, 1]), dt)
-        self.sim_timeobj = imageanalyzer2.Time(np.array([0, 1]), dt)
-        self.ref_fqobj = imageanalyzer2.Freq(np.array([0, 1]), 1)
-        self.sim_fqobj = imageanalyzer2.Freq(np.array([0, 1]), 1)
+        self.ref_timeobj = imageanalyzer2.Time()
+        self.sim_timeobj = imageanalyzer2.Time()
+        self.ref_fqobj = imageanalyzer2.Freq()
+        self.sim_fqobj = imageanalyzer2.Freq()
         self.pre_fft = None
         self.ref_wave = None
         self.t_sq = self.ref_timeobj.t_sq

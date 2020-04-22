@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 
 class Time:
-    def __init__(self, wave, dt):
+    def __init__(self, wave=np.array([0, 1]), dt=1):
         self.wave = wave
         self.n = len(self.wave)
         self.mean = np.mean(self.wave)
@@ -57,7 +57,7 @@ class Time:
 
 
 class Freq:
-    def __init__(self, fft, df):
+    def __init__(self, fft=np.array([0, 1]), df=1):
         self.fft = fft
         self.n = len(self.fft)
         self.df = df
