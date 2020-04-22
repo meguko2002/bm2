@@ -12,12 +12,19 @@ class Time:
         self.dt = dt
         self.df = 1 / self.n / self.dt
 
-    def set_wave(self, wave, dt):
+    def set_wavedt(self, wave, dt):
         self.wave = wave
         self.n = len(self.wave)
         self.mean = np.mean(self.wave)
         self.std = np.std(self.wave)
         self.dt = dt
+        self.df = 1 / self.n / self.dt
+
+    def set_wave(self, wave):
+        self.wave = wave
+        self.n = len(self.wave)
+        self.mean = np.mean(self.wave)
+        self.std = np.std(self.wave)
         self.df = 1 / self.n / self.dt
 
     def set_dt(self, dt):
@@ -51,6 +58,12 @@ class Time:
 
 class Freq:
     def __init__(self, fft, df):
+        self.fft = fft
+        self.n = len(self.fft)
+        self.df = df
+        self.dt = 1 / self.n / self.df
+
+    def set_fdf(self, fft, df):
         self.fft = fft
         self.n = len(self.fft)
         self.df = df

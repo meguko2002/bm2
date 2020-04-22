@@ -34,7 +34,7 @@ class Simuration():
     def set_fig(self):
         self.fig, (self.ax_original_image, self.ax_ref_image, self.ax_sim_image,\
                    self.ax_wave, self.ax_fft) = \
-        plt.subplots(nrows=5, figsize=(8,10))
+        plt.subplots(nrows=5, figsize=(8,8))
 
     def set_ax(self):
         self.line_refwave, = self.ax_wave.plot([], [], 'green',\
@@ -100,7 +100,7 @@ class Simuration():
                 self.x_a, self.y_a = event.xdata, event.ydata
                 self.area_fft = True
             elif event.button == 2:     # reset
-                self.sim_timeobj.set_wave(self.ref_wave)
+                self.sim_timeobj.set_wavedt(self.ref_wave, dt)
                 self.sim_fqobj.set_f(self.ref_timeobj.fft)
                 self.sim_draw()
                 self.fig.canvas.draw()
@@ -109,7 +109,7 @@ class Simuration():
                 tmp_fft = self.sim_fqobj.fft
                 self.sim_fqobj.set_f(self.pre_fft)
                 self.pre_fft = tmp_fft
-                self.sim_timeobj.set_wave(self.sim_fqobj.inv_wave())
+                self.sim_timeobj.set_wavedt(self.sim_fqobj.inv_wave(), dt)
                 self.sim_draw()
                 self.fig.canvas.draw()
 
@@ -155,11 +155,10 @@ class Simuration():
         self.trimmed_image = self.raw_image[top: end, left: right]
 
     def set_initial_wave(self):
-        self.ref_timeobj.set_wave(self.ref_wave)
-        self.ref_fqobj.set_f(self.ref_timeobj.fft)
-        self.ref_fqobj.set_df(self.ref_timeobj.df)
+        self.ref_timeobj.set_wavedt(self.ref_wave, dt)
+        self.ref_fqobj.set_fdf(self.ref_timeobj.fft,self.ref_timeobj.df)
         self.sim_fqobj = self.ref_fqobj
-        self.sim_timeobj.set_wave(self.sim_fqobj.inv_wave())
+        self.sim_timeobj.set_wavedt(self.sim_fqobj.inv_wave(), dt)
         self.t_sq = self.ref_timeobj.t_sq
         self.x_data = self.t_sq
         self.fq_sq = self.ref_fqobj.fq_sq
@@ -177,7 +176,7 @@ class Simuration():
         self.pre_fft = self.sim_fqobj.fft
         self.fft_filter(in_freq, out_freq, prop)
         self.sim_fqobj.set_f(self.pre_fft * self.filter)
-        self.sim_timeobj.set_wave(self.sim_fqobj.inv_wave())
+        self.sim_timeobj.set_wavedt(self.sim_fqobj.inv_wave(), dt)
         self.line_simwave.set_data(self.x_data, self.sim_timeobj.wave)
         self.line_simfft.set_data(self.fq_sq, self.sim_fqobj.fft_abs)
         self.ax_sim_image.imshow(self.sim_timeobj.image(1),'gray', vmin=0, vmax=255, aspect='auto')
