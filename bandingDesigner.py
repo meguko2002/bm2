@@ -59,7 +59,6 @@ class Simuration():
     def set_frame(self):
         self.ax_original_image.set_title('original image')
         self.ax_ref_image.set_title('ref image')
-        # todo refactoring
 
         ref_spines = ['left', 'right', 'top', 'bottom']
         for spine in ref_spines:
@@ -68,8 +67,6 @@ class Simuration():
             self.ax_ref_image.spines[spine].set_linestyle("dashed")
             self.ax_sim_image.spines[spine].set_color("black")
             self.ax_sim_image.spines[spine].set_linewidth(2)
-
-
 
         self.ax_sim_image.set_title('sim image')
         self.ax_wave.grid(True)
@@ -82,7 +79,7 @@ class Simuration():
         self.ax_fft.legend()
 
     def onselect(self, eclick, erelease):
-        pass
+        pass        # 座標を返すこともできるが、on,offの座標が逆転するバグがあるので使わない
 
     def onclick(self, event):
         if event.inaxes == self.ax_original_image:
