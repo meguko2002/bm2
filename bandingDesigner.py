@@ -4,6 +4,7 @@ import matplotlib.pylab as plt
 from matplotlib.widgets import RadioButtons , RectangleSelector
 import numpy as np
 import imageanalyzer2
+import math
 import PySimpleGUI as sg
 
 
@@ -12,6 +13,7 @@ class Simuration ():
         self.file = file
         self.dt = dt
         self.ps = 226
+        self.datanum = 0
         self.f_range = 100
         self.amp_max = 5
         self.isimage = isimage
@@ -66,17 +68,29 @@ class Simuration ():
         self.ax_fft.legend ()
 
     def set_x_scale(self, label):
-        unit = {'sec': self.t_sq, 'mm': self.t_sq * self.ps, 'pixel': np.arange(self.ref_timeobj.n)}
-        self.x_data = unit[label]
+        unit = {'sec': self.t_sq, 'mm': self.t_sq * self.ps, 'pixel': np.arange(self.datanum)}
         self.ax_ref_image.set_xlabel (label)
         self.ax_sim_image.set_xlabel (label)
-        self.ax_wave.set_xlabel (label)
-        self.ref_draw()
-        self.sim_draw()
-        self.ax_wave.set_xlim(0, self.x_data[-1])
-        self.ax_image.set_xticks(np.arange(0, self.t_sq, 1))
 
+        # delta, _ = self.tx(self.x_data[-1])
+        # self.ax_ref_image.set_xticks(np.arange(0, self.x_data[-1]*self.dt, delta*self.dt))
+        # self.ax_ref_image.set_xlabel(np.arange(0, self.x_data[-1], delta))
         self.fig.canvas.draw()
+
+    def tx(self, N):
+        delta = 0
+        mod = N
+        for i in (5 , 6 , 7 , 8):  # グラフを等分する個数
+            x = N / i
+            k = int ( math.log10 ( x ) )
+            if x < 1: k -= 1
+            for j in (1 , 2 , 5):  # 2,5,10の倍数で等分する
+                tmpdelta = j * 10 ** k
+                tmpmod = N - tmpdelta * i
+                if abs ( mod ) > abs ( tmpmod ):  # あまりが小さいのものを選ぶ
+                    mod = tmpmod
+                    delta = tmpdelta
+        return delta , N // delta
 
     def set_radio_box(self):
         axcolor = 'lightgoldenrodyellow'
@@ -148,27 +162,27 @@ class Simuration ():
 
     def set_initial_wave(self):
         self.ref_timeobj.set_wavedt ( self.ref_wave , dt )
+        self.datanum = self.ref_timeobj.n
         self.ref_fqobj.set_fdf ( self.ref_timeobj.fft , self.ref_timeobj.df )
         self.sim_fqobj = self.ref_fqobj
         self.sim_timeobj.set_wavedt ( self.sim_fqobj.inv_wave () , dt )
         self.t_sq = self.ref_timeobj.t_sq
-        self.x_data = self.t_sq
         self.fq_sq = self.ref_fqobj.fq_sq
 
     def set_initial_axis(self):
-        self.ax_wave.set_xlim ( 0 , self.ref_timeobj.n * self.ref_timeobj.dt )
+        self.ax_wave.set_xlim ( 0 , self.datanum * self.ref_timeobj.dt )
         self.ax_wave.set_ylim (min(self.ref_wave)*0.9, max(self.ref_wave)*1.1)
         self.ax_fft.set_xlim ( 0 , self.f_range )
         self.ax_fft.set_ylim ( 0 , self.amp_max )
 
     def ref_draw(self):
-        self.line_refwave.set_data ( self.x_data , self.ref_timeobj.wave )
+        self.line_refwave.set_data ( self.t_sq , self.ref_timeobj.wave )
         self.line_reffft.set_data ( self.fq_sq , self.ref_fqobj.fft_abs )
         self.ax_ref_image.imshow ( self.ref_timeobj.image ( 1 ) , 'gray' , vmin=0 , vmax=255 , aspect='auto' )
 
     def sim_draw(self):
         self.line_simfft.set_data ( self.fq_sq , self.sim_fqobj.fft_abs )
-        self.line_simwave.set_data ( self.x_data , self.sim_timeobj.wave )
+        self.line_simwave.set_data ( self.t_sq , self.sim_timeobj.wave )
         self.ax_sim_image.imshow ( self.sim_timeobj.image ( 1 ) , 'gray' , vmin=0 , vmax=255 , aspect='auto' )
 
     def fft_change(self):
@@ -176,7 +190,7 @@ class Simuration ():
         self.fft_filter ()
         self.sim_fqobj.set_f ( self.pre_fft * self.filter )
         self.sim_timeobj.set_wavedt ( self.sim_fqobj.inv_wave () , dt )
-        self.line_simwave.set_data ( self.x_data , self.sim_timeobj.wave )
+        self.line_simwave.set_data ( self.t_sq , self.sim_timeobj.wave )
         self.line_simfft.set_data ( self.fq_sq , self.sim_fqobj.fft_abs )
         self.ax_sim_image.imshow ( self.sim_timeobj.image ( 1 ) , 'gray' , vmin=0 , vmax=255 , aspect='auto' )
 
@@ -184,7 +198,7 @@ class Simuration ():
         prop = self.y_b / self.y_a
         out_freq = max ( self.x_a , self.x_b )
         in_freq = min ( self.x_a , self.x_b )
-        self.filter = np.ones ( self.ref_timeobj.n )
+        self.filter = np.ones ( self.datanum)
         if in_freq > out_freq:
             tmp = in_freq
             in_freq = out_freq

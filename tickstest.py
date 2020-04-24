@@ -14,7 +14,6 @@ def tx(N):
             if abs(mod) > abs(tmpmod):  # あまりが小さいのものを選ぶ
                 mod = tmpmod
                 delta = tmpdelta
-
     return delta, N // delta
 
 input =0.069
