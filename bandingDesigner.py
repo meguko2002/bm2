@@ -129,10 +129,8 @@ class Simuration ():
         ra_xs = plt.axes([0.8, 0.9, 0.1, 0.1], facecolor=axcolor)
         self.radio_x_scale = RadioButtons(ra_xs, ('pixel','mm','sec'))
 
-        delta_f = 50
-        f0 = 300
         axfreq = plt.axes ( [0.2 , 0.02 , 0.6 , 0.03] , facecolor=axcolor )
-        self.sfreq = Slider ( axfreq , 'Freq' , 1 , 10 , valinit=f0 , valstep=delta_f )
+        self.sfreq = Slider ( axfreq , 'Freq' , 50 , 2000 , valinit=300 , valstep=50 )
 
     def onselect(self , eclick , erelease):
         pass  # 座標を返すこともできるが、on,offの座標が逆転するバグがあるので使わない
@@ -164,7 +162,7 @@ class Simuration ():
                 self.sim_draw ()
                 self.fig.canvas.draw ()
 
-    def offclick(self , event):
+    def offclick(self, event):
         self.x_b , self.y_b = event.xdata , event.ydata
         if event.button == 1:
             if self.selected_area == 'origin' and event.inaxes == self.ax_original_data:
@@ -173,6 +171,10 @@ class Simuration ():
                 self.fft_change ()
             self.selected_area = None
             self.fig.canvas.draw ()
+
+    def update(self, val):
+        self.ax_fft.set_xlim ( 0 , self.sfreq.val )
+        self.fig.canvas.draw_idle ()
 
     def ref_setting(self):
         self.patch.set_visible(False)
@@ -271,8 +273,9 @@ class Simuration ():
         self.radio_x_scale.on_clicked(self.set_x_scale)
         RS_im = RectangleSelector ( self.ax_original_data , self.onselect , drawtype='box' , useblit=True )
         RS_fft = RectangleSelector ( self.ax_fft , self.onselect , drawtype='box' , useblit=True )
-        self.fig.canvas.mpl_connect ( 'button_press_event' , self.onclick )
-        self.fig.canvas.mpl_connect ( 'button_release_event' , self.offclick )
+        self.fig.canvas.mpl_connect ( 'button_press_event', self.onclick )
+        self.fig.canvas.mpl_connect ( 'button_release_event', self.offclick )
+        self.sfreq.on_changed(self.update)
 
         plt.show ()
 
