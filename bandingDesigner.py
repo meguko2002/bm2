@@ -42,6 +42,7 @@ class Simuration ():
         self.t_sq = self.ref_timeobj.t_sq
         self.fq_sq = self.ref_fqobj.fq_sq
         self.x_a , self.y_a , self.x_b , self.y_b = None , None , None , None
+        self.patch = patches.Rectangle ( xy=(0,0), width=1 , height=1, fill=False )
         self.filter = None
         self.selected_area = None  # or 'fft'
         self.set_fig ()
@@ -174,8 +175,7 @@ class Simuration ():
             self.fig.canvas.draw ()
 
     def ref_setting(self):
-        self.ax_original_data.cla ()
-        self.ax_original_data.set_title ( 'original image' )
+        self.patch.set_visible(False)
         if self.isimage:    self.set_original_image()
         else:   self.set_original_wave()
         self.trim_original_data()
