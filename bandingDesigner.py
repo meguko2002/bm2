@@ -11,7 +11,7 @@ class Simuration ():
     def __init__(self , file , dt , isimage=True):
         self.file = file
         self.dt = dt
-        # self.ps = 226
+        self.ps = 226
         self.f_range = 100
         self.amp_max = 5
         self.isimage = isimage
@@ -29,11 +29,11 @@ class Simuration ():
         self.set_fig ()
         self.set_ax ()
         self.set_frame ()
+        self.set_radio_box()
 
     def set_fig(self):
         self.fig , (self.ax_original_data , self.ax_ref_image , self.ax_sim_image , \
                     self.ax_wave , self.ax_fft) = plt.subplots ( nrows=5 , figsize=(8 , 8) )
-
 
     def set_ax(self):
         self.line_refwave , = self.ax_wave.plot ( [] , [] , 'green' , \
@@ -48,21 +48,40 @@ class Simuration ():
     def set_frame(self):
         self.ax_original_data.set_title ( 'original image' )
         self.ax_ref_image.set_title ( 'ref image' )
+        self.ax_sim_image.set_title ( 'sim image' )
         for spine in ('left' , 'right' , 'top' , 'bottom'):
             self.ax_ref_image.spines[spine].set_color ( "g" )
             self.ax_ref_image.spines[spine].set_linewidth ( 1 )
             self.ax_ref_image.spines[spine].set_linestyle ( "dashed" )
             self.ax_sim_image.spines[spine].set_color ( "black" )
             self.ax_sim_image.spines[spine].set_linewidth ( 2 )
-        self.ax_sim_image.set_title ( 'sim image' )
-        self.ax_wave.grid ( True )
-        self.ax_fft.grid ( True )
+
         self.ax_wave.set_xlabel ( 'sec' )
         self.ax_wave.set_ylabel ( 'L*' )
+        self.ax_wave.grid ( True )
+        self.ax_wave.legend ()
         self.ax_fft.set_xlabel ( 'Hz' )
         self.ax_fft.set_ylabel ( 'amp' )
-        self.ax_wave.legend ()
+        self.ax_fft.grid ( True )
         self.ax_fft.legend ()
+
+    def set_x_scale(self, label):
+        unit = {'sec': self.t_sq, 'mm': self.t_sq * self.ps, 'pixel': np.arange(self.ref_timeobj.n)}
+        self.x_data = unit[label]
+        self.ax_ref_image.set_xlabel (label)
+        self.ax_sim_image.set_xlabel (label)
+        self.ax_wave.set_xlabel (label)
+        self.ref_draw()
+        self.sim_draw()
+        self.ax_wave.set_xlim(0, self.x_data[-1])
+        self.ax_image.set_xticks(np.arange(0, self.t_sq, 1))
+
+        self.fig.canvas.draw()
+
+    def set_radio_box(self):
+        axcolor = 'lightgoldenrodyellow'
+        ra_xs = plt.axes([0.8, 0.3, 0.1, 0.1], facecolor=axcolor)
+        self.radio_x_scale = RadioButtons(ra_xs, ('sec', 'mm', 'pixel'))
 
     def onselect(self , eclick , erelease):
         pass  # 座標を返すこともできるが、on,offの座標が逆転するバグがあるので使わない
@@ -196,6 +215,7 @@ class Simuration ():
             self.ax_original_data.set_title ( 'original wave' )
             self.set_original_wave ()
 
+        self.radio_x_scale.on_clicked(self.set_x_scale)
         RS_im = RectangleSelector ( self.ax_original_data , self.onselect , drawtype='box' , useblit=True )
         RS_fft = RectangleSelector ( self.ax_fft , self.onselect , drawtype='box' , useblit=True )
         self.fig.canvas.mpl_connect ( 'button_press_event' , self.onclick )
@@ -206,5 +226,7 @@ class Simuration ():
 
 if __name__ == '__main__':
     dt = 0.0005
-    sim = Simuration ( ('ref.tif') , dt , isimage=0)
+    # file = 'sinwave.txt'
+    file = 'ref.tif'
+    sim = Simuration ( file, dt , isimage=1)
     sim.run ()
