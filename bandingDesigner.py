@@ -8,11 +8,27 @@ import math
 import PySimpleGUI as sg
 
 
+def tx(N):
+    delta = 0
+    mod = N
+    for i in (5 , 6 , 7 , 8):  # グラフを等分する個数
+        x = N / i
+        k = int ( math.log10 ( x ) )
+        if x < 1: k -= 1
+        for j in (1 , 2 , 5):  # 2,5,10の倍数で等分する
+            tmpdelta = j * 10 ** k
+            tmpmod = N - tmpdelta * i
+            if abs ( mod ) > abs ( tmpmod ):  # あまりが小さいのものを選ぶ
+                mod = tmpmod
+                delta = tmpdelta
+    return delta , N // delta
+
+
 class Simuration ():
     def __init__(self , file , dt , isimage=True):
         self.file = file
         self.dt = dt
-        self.ps = 226
+        self.ps = 200
         self.datanum = 0
         self.f_range = 100
         self.amp_max = 5
@@ -68,29 +84,42 @@ class Simuration ():
         self.ax_fft.legend ()
 
     def set_x_scale(self, label):
-        unit = {'sec': self.t_sq, 'mm': self.t_sq * self.ps, 'pixel': np.arange(self.datanum)}
         self.ax_ref_image.set_xlabel (label)
         self.ax_sim_image.set_xlabel (label)
+        # if label == 'sec':
+        #     delta, _ = self.tx(self.datanum * dt)
+        #     self.ax_ref_image.set_xticks(np.arange(0, self.datanum, delta / self.dt))
+        #     self.ax_ref_image.set_xticklabels(np.arange(0, self.datanum * dt,  delta))
+        #
+        # elif label == 'mm':
+        #     delta, unit_num = self.tx(self.datanum * dt * self.ps)
+        #     self.ax_ref_image.set_xticks(np.arange(0, self.datanum, int(delta /self.dt / self.ps)))
+        #     self.ax_ref_image.set_xticklabels(np.arange(0, self.datanum * dt * self.ps, delta))
+        #     print(np.arange(0, delta * unit_num,  delta))
+        # elif label == 'pixel':
+        #     delta, _ = self.tx(self.datanum)
+        #     self.ax_ref_image.set_xticks(np.arange(0, self.datanum, delta))
+        #     self.ax_ref_image.set_xticklabels(np.arange(0, self.datanum, delta))
 
-        # delta, _ = self.tx(self.x_data[-1])
-        # self.ax_ref_image.set_xticks(np.arange(0, self.x_data[-1]*self.dt, delta*self.dt))
-        # self.ax_ref_image.set_xlabel(np.arange(0, self.x_data[-1], delta))
+
+        if label == 'pixel':
+            max_data_num = self.datanum
+            delta , _ = tx ( max_data_num )
+            delta_pix = delta
+        elif label == 'sec':
+            max_data_num = self.datanum * dt
+            delta , _ = tx ( max_data_num )
+            delta_pix = int(delta/ self.dt)
+        elif label == 'mm':
+            max_data_num = self.datanum * dt *self.ps
+            delta,_= tx (max_data_num)
+            delta_pix = int ( delta / self.dt / self.ps )
+        self.ax_ref_image.set_xticks(np.arange(0, self.datanum, delta_pix))
+        self.ax_ref_image.set_xticklabels(np.round(np.arange(0, max_data_num, delta),1))
+        self.ax_sim_image.set_xticks(np.arange(0, self.datanum, delta_pix))
+        self.ax_sim_image.set_xticklabels(np.round(np.arange(0, max_data_num, delta), 1))
+
         self.fig.canvas.draw()
-
-    def tx(self, N):
-        delta = 0
-        mod = N
-        for i in (5 , 6 , 7 , 8):  # グラフを等分する個数
-            x = N / i
-            k = int ( math.log10 ( x ) )
-            if x < 1: k -= 1
-            for j in (1 , 2 , 5):  # 2,5,10の倍数で等分する
-                tmpdelta = j * 10 ** k
-                tmpmod = N - tmpdelta * i
-                if abs ( mod ) > abs ( tmpmod ):  # あまりが小さいのものを選ぶ
-                    mod = tmpmod
-                    delta = tmpdelta
-        return delta , N // delta
 
     def set_radio_box(self):
         axcolor = 'lightgoldenrodyellow'
