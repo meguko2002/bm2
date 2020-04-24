@@ -1,7 +1,7 @@
 import cv2
 import matplotlib.patches as patches
 import matplotlib.pylab as plt
-from matplotlib.widgets import RadioButtons , RectangleSelector
+from matplotlib.widgets import RadioButtons , RectangleSelector, Slider
 import numpy as np
 import imageanalyzer2
 import math
@@ -29,7 +29,7 @@ class Simuration ():
         self.file = file
         self.dt = dt
         self.ps = ps
-        self.datanum = 0
+        self.datanum = None
         self.f_range = 100
         self.amp_max = 5
         self.isimage = isimage
@@ -47,7 +47,7 @@ class Simuration ():
         self.set_fig ()
         self.set_ax ()
         self.set_frame ()
-        self.set_radio_box()
+        self.set_widgets()
 
     def set_fig(self):
         self.fig , (self.ax_original_data , self.ax_ref_image , self.ax_sim_image , \
@@ -86,44 +86,52 @@ class Simuration ():
 
     def set_x_scale(self, label):
         if label == 'pixel':
-            max_data_num = self.datanum
-            delta, _ = tx ( max_data_num )
-            delta_pix = delta
+            if self.datanum is not None:
+                max_data_num = self.datanum
+                delta, _ = tx ( max_data_num )
+                delta_pix = delta
             """original_image_setting"""
             org_max_data_num = self.original_datanum
             org_delta, _ =tx (org_max_data_num)
             org_delta_pix = org_delta
         elif label == 'sec':
-            max_data_num = self.datanum * self.dt
-            delta , _ = tx ( max_data_num )
-            delta_pix = int(delta / self.dt)
+            if self.datanum is not None:
+                max_data_num = self.datanum * self.dt
+                delta , _ = tx ( max_data_num )
+                delta_pix = int(delta / self.dt)
             """original_image_setting"""
             org_max_data_num = self.original_datanum * self.dt
             org_delta, _ = tx ( org_max_data_num )
             org_delta_pix = int(org_delta / self.dt)
         elif label == 'mm':
-            max_data_num = self.datanum * dt *self.ps
-            delta,_= tx (max_data_num)
-            delta_pix = int ( delta / self.dt / self.ps )
+            if self.datanum is not None:
+                max_data_num = self.datanum * dt *self.ps
+                delta,_= tx (max_data_num)
+                delta_pix = int ( delta / self.dt / self.ps )
             """original_image_setting"""
             org_max_data_num = self.original_datanum * self.dt * self.ps
             org_delta , _ = tx ( org_max_data_num )
             org_delta_pix = int(org_delta/ self.dt / self.ps)
-
-        self.ax_ref_image.set_xticks(np.arange(0, self.datanum, delta_pix))
-        self.ax_ref_image.set_xticklabels(np.round(np.arange(0, max_data_num, delta),1))
-        self.ax_sim_image.set_xticks(np.arange(0, self.datanum, delta_pix))
-        self.ax_sim_image.set_xticklabels(np.round(np.arange(0, max_data_num, delta), 1))
+        if self.datanum is not None:
+            self.ax_ref_image.set_xticks(np.arange(0, self.datanum, delta_pix))
+            self.ax_ref_image.set_xticklabels(np.round(np.arange(0, max_data_num, delta),1))
+            self.ax_sim_image.set_xticks(np.arange(0, self.datanum, delta_pix))
+            self.ax_sim_image.set_xticklabels(np.round(np.arange(0, max_data_num, delta), 1))
 
         self.ax_original_data.set_xticks(np.round(np.arange(0, self.original_datanum, org_delta_pix),1))
         self.ax_original_data.set_xticklabels(np.round(np.arange(0, org_max_data_num, org_delta), 1))
 
         self.fig.canvas.draw()
 
-    def set_radio_box(self):
+    def set_widgets(self):
         axcolor = 'lightgoldenrodyellow'
         ra_xs = plt.axes([0.8, 0.9, 0.1, 0.1], facecolor=axcolor)
         self.radio_x_scale = RadioButtons(ra_xs, ('pixel','mm','sec'))
+
+        delta_f = 50
+        f0 = 300
+        axfreq = plt.axes ( [0.2 , 0.02 , 0.6 , 0.03] , facecolor=axcolor )
+        self.sfreq = Slider ( axfreq , 'Freq' , 1 , 10 , valinit=f0 , valstep=delta_f )
 
     def onselect(self , eclick , erelease):
         pass  # 座標を返すこともできるが、on,offの座標が逆転するバグがあるので使わない
