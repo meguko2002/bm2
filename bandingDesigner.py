@@ -32,6 +32,7 @@ class Simuration ():
         self.datanum = None
         self.f_range = 300
         self.amp_max = 5
+        self.wave_cont = 1
         self.isimage = isimage
         self.ref_timeobj = imageanalyzer2.Time ()
         self.sim_timeobj = imageanalyzer2.Time ()
@@ -129,15 +130,19 @@ class Simuration ():
     def set_widgets(self):
         axcolor = 'lightgoldenrodyellow'
         ra_xs = plt.axes([0.8, 0.9, 0.1, 0.1], facecolor=axcolor)
-        self.radio_x_scale = RadioButtons(ra_xs, ('pixel','mm','sec'))
+        self.radio_x_scale = RadioButtons(ra_xs, ('pixel','mm','sec'), activecolor='green' )
 
         ax_freq = plt.axes ( [0.2 , 0.02 , 0.6 , 0.02] , facecolor=axcolor )
         self.s_freq = Slider ( ax_freq , 'max freq' , 50 , 2000 , valinit=self.f_range \
-                               , valstep=50 , valfmt='%1.0f' , color='green' )
+                               , valstep=50 , valfmt='%1.0f', color='green' )
 
         ax_amp = plt.axes ( [0.02 , 0.12 , 0.02 , 0.12] , facecolor=axcolor )    # axes([左, 下, 幅, 高さ])
         self.s_amp = Slider ( ax_amp , 'amp' , 1 , 10, valinit=self.amp_max \
-                 ,orientation='vertical', valstep=0.1, valfmt='%1.0f', color='green' )
+                 ,orientation='vertical', valstep=1, valfmt='%1.0f', color='green' )
+
+        ax_cont = plt.axes ( [0.02 , 0.28 , 0.02 , 0.12] , facecolor=axcolor )    # axes([左, 下, 幅, 高さ])
+        self.s_cont = Slider ( ax_cont , 'cont' , 0.2 , 1.8, valinit=self.wave_cont \
+                 ,orientation='vertical', valstep=0.1, valfmt='%1.1f', color='green' )
 
     def onselect(self , eclick , erelease):
         pass  # 座標を返すこともできるが、on,offの座標が逆転するバグがあるので使わない
@@ -184,6 +189,13 @@ class Simuration ():
         self.ax_fft.set_ylim(0, self.s_amp.val)
         self.fig.canvas.draw_idle ()
 
+    def update_cont(self, val):
+        self.wave_cont = self.s_cont.val
+        self.set_initial_wave ()
+        self.ref_draw ()
+        self.sim_draw ()
+        self.fig.canvas.draw_idle ()
+
     def ref_setting(self):
         self.patch.set_visible(False)
         if self.isimage:    self.set_original_image()
@@ -208,7 +220,7 @@ class Simuration ():
             self.ref_wave = self.original_wave[top: end]
 
     def set_initial_wave(self):
-        self.ref_timeobj.set_wavedt ( self.ref_wave , dt )
+        self.ref_timeobj.set_wavedt ( (self.ref_wave - np.mean(self.ref_wave) ) * self.wave_cont + np.mean(self.ref_wave), dt )
         self.datanum = self.ref_timeobj.n
         self.ref_fqobj.set_fdf ( self.ref_timeobj.fft , self.ref_timeobj.df )
         self.sim_fqobj = self.ref_fqobj
@@ -286,6 +298,7 @@ class Simuration ():
         self.fig.canvas.mpl_connect ( 'button_release_event', self.offclick )
         self.s_freq.on_changed( self.update )
         self.s_amp.on_changed( self.update )
+        self.s_cont.on_changed( self.update_cont )
 
         plt.show ()
 
