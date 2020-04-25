@@ -30,7 +30,7 @@ class Simuration ():
         self.dt = dt
         self.ps = ps
         self.datanum = None
-        self.f_range = 100
+        self.f_range = 300
         self.amp_max = 5
         self.isimage = isimage
         self.ref_timeobj = imageanalyzer2.Time ()
@@ -130,7 +130,8 @@ class Simuration ():
         self.radio_x_scale = RadioButtons(ra_xs, ('pixel','mm','sec'))
 
         axfreq = plt.axes ( [0.2 , 0.02 , 0.6 , 0.03] , facecolor=axcolor )
-        self.sfreq = Slider ( axfreq , 'Freq' , 50 , 2000 , valinit=300 , valstep=50 )
+        self.sfreq = Slider ( axfreq , 'max freq' , 50 , 2000 , valinit=self.f_range\
+                             , valstep=50, valfmt='%1.0f', color='green')
 
     def onselect(self , eclick , erelease):
         pass  # 座標を返すこともできるが、on,offの座標が逆転するバグがあるので使わない
