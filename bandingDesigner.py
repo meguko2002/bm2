@@ -81,11 +81,11 @@ class Simuration ():
         self.ax_wave.set_xlabel ( 'sec' )
         self.ax_wave.set_ylabel ( 'L*' )
         self.ax_wave.grid ( True )
-        self.ax_wave.legend ()
+        self.ax_wave.legend (loc='upper right')
         self.ax_fft.set_xlabel ( 'Hz' )
         self.ax_fft.set_ylabel ( 'amp' )
         self.ax_fft.grid ( True )
-        self.ax_fft.legend ()
+        self.ax_fft.legend (loc='upper right')
 
     def set_x_scale(self, label):
         if label == 'pixel':
@@ -131,9 +131,13 @@ class Simuration ():
         ra_xs = plt.axes([0.8, 0.9, 0.1, 0.1], facecolor=axcolor)
         self.radio_x_scale = RadioButtons(ra_xs, ('pixel','mm','sec'))
 
-        axfreq = plt.axes ( [0.2 , 0.02 , 0.6 , 0.03] , facecolor=axcolor )
-        self.sfreq = Slider ( axfreq , 'max freq' , 50 , 2000 , valinit=self.f_range\
-                             , valstep=50, valfmt='%1.0f', color='green')
+        ax_freq = plt.axes ( [0.2 , 0.02 , 0.6 , 0.02] , facecolor=axcolor )
+        self.s_freq = Slider ( ax_freq , 'max freq' , 50 , 2000 , valinit=self.f_range \
+                               , valstep=50 , valfmt='%1.0f' , color='green' )
+
+        ax_amp = plt.axes ( [0.02 , 0.12 , 0.02 , 0.12] , facecolor=axcolor )    # axes([左, 下, 幅, 高さ])
+        self.s_amp = Slider ( ax_amp , 'amp' , 1 , 10, valinit=self.amp_max \
+                 ,orientation='vertical', valstep=0.1, valfmt='%1.0f', color='green' )
 
     def onselect(self , eclick , erelease):
         pass  # 座標を返すこともできるが、on,offの座標が逆転するバグがあるので使わない
@@ -176,7 +180,8 @@ class Simuration ():
             self.fig.canvas.draw ()
 
     def update(self, val):
-        self.ax_fft.set_xlim ( 0 , self.sfreq.val )
+        self.ax_fft.set_xlim ( 0 , self.s_freq.val )
+        self.ax_fft.set_ylim(0, self.s_amp.val)
         self.fig.canvas.draw_idle ()
 
     def ref_setting(self):
@@ -279,7 +284,8 @@ class Simuration ():
         RS_fft = RectangleSelector ( self.ax_fft , self.onselect , drawtype='box' , useblit=True )
         self.fig.canvas.mpl_connect ( 'button_press_event', self.onclick )
         self.fig.canvas.mpl_connect ( 'button_release_event', self.offclick )
-        self.sfreq.on_changed(self.update)
+        self.s_freq.on_changed( self.update )
+        self.s_amp.on_changed( self.update )
 
         plt.show ()
 
