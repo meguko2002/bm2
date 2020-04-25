@@ -64,6 +64,8 @@ class Simuration ():
                                                   linewidth=1 , label='sim' )
         self.line_simfft , = self.ax_fft.plot ( [] , [] , 'black' , \
                                                 linewidth=1 , label='sim' )
+        self.line_vtffft , = self.ax_fft.plot ( [] , [] , 'gray' , \
+                                                linestyle="dashed" , linewidth=0.5 , label='vtf' )
 
     def set_frame(self):
         self.ax_original_data.set_title ( 'original image' )
@@ -219,6 +221,7 @@ class Simuration ():
         self.line_refwave.set_data ( self.t_sq , self.ref_timeobj.wave )
         self.line_reffft.set_data ( self.fq_sq , self.ref_fqobj.fft_abs )
         self.ax_ref_image.imshow ( self.ref_timeobj.image ( 1 ) , 'gray' , vmin=0 , vmax=255 , aspect='auto' )
+        self.line_vtffft.set_data ( self.fq_sq , self.ref_timeobj.ss_curve(self.ps))
 
     def sim_draw(self):
         self.line_simfft.set_data ( self.fq_sq , self.sim_fqobj.fft_abs )
