@@ -185,6 +185,8 @@ class Simuration ():
             self.fig.canvas.draw ()
 
     def update(self, val):
+        self.f_range = self.s_freq.val
+        self.amp_max = self.s_amp.val
         self.ax_fft.set_xlim ( 0 , self.s_freq.val )
         self.ax_fft.set_ylim(0, self.s_amp.val)
         self.fig.canvas.draw_idle ()
@@ -304,8 +306,8 @@ class Simuration ():
 
 
 if __name__ == '__main__':
-    dt = 0.0005
-    # file = 'sinwave.txt'
-    file = 'ref.tif'
-    sim = Simuration ( file, dt , ps=100, isimage=1)
+    dt = 0.001
+    file = 'sinwave.txt'
+    # file = 'ref.tif'
+    sim = Simuration ( file, dt , ps=1000, isimage=0)
     sim.run ()
