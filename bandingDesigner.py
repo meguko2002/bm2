@@ -8,20 +8,20 @@ import math
 import PySimpleGUI as sg
 
 
-def tx(N):
+def division_quotient(max_num):
     delta = 0
-    mod = N
+    mod = max_num
     for i in (5 , 6 , 7 , 8):  # グラフを等分する個数
-        x = N / i
+        x = max_num / i
         k = int ( math.log10 ( x ) )
         if x < 1: k -= 1
         for j in (1 , 2 , 5):  # 2,5,10の倍数で等分する
             tmpdelta = j * 10 ** k
-            tmpmod = N - tmpdelta * i
+            tmpmod = max_num - tmpdelta * i
             if abs ( mod ) > abs ( tmpmod ):  # あまりが小さいのものを選ぶ
                 mod = tmpmod
                 delta = tmpdelta
-    return delta , N // delta
+    return delta
 
 
 class Simuration ():
@@ -88,42 +88,37 @@ class Simuration ():
         self.ax_fft.grid ( True )
         self.ax_fft.legend (loc='upper right')
 
-    def set_x_scale(self, label):
+    def set_image_x_array(self, label, data_num):
+        max_data_num, delta_pix, dq = None, None, None
         if label == 'pixel':
-            if self.datanum is not None:
-                max_data_num = self.datanum
-                delta, _ = tx ( max_data_num )
-                delta_pix = delta
-            """original_image_setting"""
-            org_max_data_num = self.original_datanum
-            org_delta, _ =tx (org_max_data_num)
-            org_delta_pix = org_delta
+            max_data_num = data_num
+            dq = division_quotient ( max_data_num )
+            delta_pix = dq
         elif label == 'sec':
-            if self.datanum is not None:
-                max_data_num = self.datanum * self.dt
-                delta , _ = tx ( max_data_num )
-                delta_pix = int(delta / self.dt)
-            """original_image_setting"""
-            org_max_data_num = self.original_datanum * self.dt
-            org_delta, _ = tx ( org_max_data_num )
-            org_delta_pix = int(org_delta / self.dt)
+            max_data_num = data_num * self.dt
+            dq = division_quotient ( max_data_num )
+            delta_pix = int( dq / self.dt )
         elif label == 'mm':
-            if self.datanum is not None:
-                max_data_num = self.datanum * dt *self.ps
-                delta,_= tx (max_data_num)
-                delta_pix = int ( delta / self.dt / self.ps )
-            """original_image_setting"""
-            org_max_data_num = self.original_datanum * self.dt * self.ps
-            org_delta , _ = tx ( org_max_data_num )
-            org_delta_pix = int(org_delta/ self.dt / self.ps)
-        if self.datanum is not None:
-            self.ax_ref_image.set_xticks(np.arange(0, self.datanum, delta_pix))
-            self.ax_ref_image.set_xticklabels(np.round(np.arange(0, max_data_num, delta),1))
-            self.ax_sim_image.set_xticks(np.arange(0, self.datanum, delta_pix))
-            self.ax_sim_image.set_xticklabels(np.round(np.arange(0, max_data_num, delta), 1))
+            max_data_num = data_num * dt * self.ps
+            dq = division_quotient ( max_data_num )
+            delta_pix = int ( dq / self.dt / self.ps )
+        ticks = np.arange(0, data_num, delta_pix)
+        labels  = np.round( np.arange( 0 , max_data_num , dq ) , 1 )
+        return ticks, labels
 
-        self.ax_original_data.set_xticks(np.round(np.arange(0, self.original_datanum, org_delta_pix),1))
-        self.ax_original_data.set_xticklabels(np.round(np.arange(0, org_max_data_num, org_delta), 1))
+    def set_image_x_sclae(self, ax, ticks, labels):
+        ax.set_xticks (ticks)
+        ax.set_xticklabels (labels)
+
+    def set_x_scale(self, label):
+        if self.datanum is not None:
+            # ref/sim_image xtick設定
+            ticks , labels  = self.set_image_x_array(label, self.datanum)
+            self.set_image_x_sclae ( self.ax_ref_image , ticks , labels )
+            self.set_image_x_sclae ( self.ax_sim_image , ticks , labels )
+        # original_image xtick設定
+        ticks , labels  = self.set_image_x_array(label, self.original_datanum)
+        self.set_image_x_sclae ( self.ax_original_data , ticks , labels )
 
         self.fig.canvas.draw()
 
@@ -307,7 +302,7 @@ class Simuration ():
 
 if __name__ == '__main__':
     dt = 0.001
-    file = 'sinwave.txt'
-    # file = 'ref.tif'
-    sim = Simuration ( file, dt , ps=1000, isimage=0)
+    # file = 'sinwave.txt'
+    file = 'ref.tif'
+    sim = Simuration ( file, dt , ps=1000, isimage=1)
     sim.run ()
