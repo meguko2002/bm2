@@ -9,9 +9,14 @@ import PySimpleGUI as sg
 
 
 def division_quotient(max_num):
+    """
+    グラフのx軸の間隔をちょうど良い感じにする目的の関数。
+    2,5,10の倍数のいずれかの単位でmax_numを５〜１０分割する
+    戻りは分割単位
+    """
     delta = 0
     mod = max_num
-    for i in (5 , 6 , 7 , 8):  # グラフを等分する個数
+    for i in (5 , 6 , 7 , 8):  # グラフをざっくり分割する個数
         x = max_num / i
         k = int ( math.log10 ( x ) )
         if x < 1: k -= 1
@@ -44,6 +49,8 @@ class Simuration ():
         self.fq_sq = self.ref_fqobj.fq_sq
         self.x_a , self.y_a , self.x_b , self.y_b = None , None , None , None
         self.patch = patches.Rectangle ( xy=(0,0), width=1 , height=1, fill=False )
+        self.labels = ('pixel','mm','sec')
+        self.label = self.labels[0]
         self.filter = None
         self.selected_area = None  # or 'fft'
         self.set_fig ()
@@ -88,17 +95,29 @@ class Simuration ():
         self.ax_fft.grid ( True )
         self.ax_fft.legend (loc='upper right')
 
-    def set_image_x_array(self, label, data_num):
+    def set_x_scale(self, label):
+        self.label = label
+        if self.datanum is not None:
+            # ref/sim_image xtick設定
+            xticks , xlabels  = self.set_image_x_array(self.datanum )
+            self.set_image_x_sclae ( self.ax_ref_image , xticks , xlabels )
+            self.set_image_x_sclae ( self.ax_sim_image , xticks , xlabels )
+        # original_image xtick設定
+        xticks , xlabels  = self.set_image_x_array(self.original_datanum )
+        self.set_image_x_sclae ( self.ax_original_data , xticks , xlabels )
+        self.fig.canvas.draw()
+
+    def set_image_x_array(self, data_num):
         max_data_num, delta_pix, dq = None, None, None
-        if label == 'pixel':
+        if self.label == 'pixel':
             max_data_num = data_num
             dq = division_quotient ( max_data_num )
             delta_pix = dq
-        elif label == 'sec':
+        elif self.label == 'sec':
             max_data_num = data_num * self.dt
             dq = division_quotient ( max_data_num )
             delta_pix = int( dq / self.dt )
-        elif label == 'mm':
+        elif self.label == 'mm':
             max_data_num = data_num * dt * self.ps
             dq = division_quotient ( max_data_num )
             delta_pix = int ( dq / self.dt / self.ps )
@@ -106,26 +125,14 @@ class Simuration ():
         labels  = np.round( np.arange( 0 , max_data_num , dq ) , 1 )
         return ticks, labels
 
-    def set_image_x_sclae(self, ax, ticks, labels):
-        ax.set_xticks (ticks)
-        ax.set_xticklabels (labels)
-
-    def set_x_scale(self, label):
-        if self.datanum is not None:
-            # ref/sim_image xtick設定
-            ticks , labels  = self.set_image_x_array(label, self.datanum)
-            self.set_image_x_sclae ( self.ax_ref_image , ticks , labels )
-            self.set_image_x_sclae ( self.ax_sim_image , ticks , labels )
-        # original_image xtick設定
-        ticks , labels  = self.set_image_x_array(label, self.original_datanum)
-        self.set_image_x_sclae ( self.ax_original_data , ticks , labels )
-
-        self.fig.canvas.draw()
+    def set_image_x_sclae(self, ax, xticks, xlabels):
+        ax.set_xticks (xticks)
+        ax.set_xticklabels (xlabels)
 
     def set_widgets(self):
         axcolor = 'lightgoldenrodyellow'
         ra_xs = plt.axes([0.8, 0.9, 0.1, 0.1], facecolor=axcolor)
-        self.radio_x_scale = RadioButtons(ra_xs, ('pixel','mm','sec'), activecolor='green' )
+        self.radio_x_scale = RadioButtons(ra_xs, self.labels, activecolor='green' )
 
         ax_freq = plt.axes ( [0.2 , 0.02 , 0.6 , 0.02] , facecolor=axcolor )
         self.s_freq = Slider ( ax_freq , 'max freq' , 50 , 2000 , valinit=self.f_range \
@@ -230,6 +237,7 @@ class Simuration ():
         self.ax_wave.set_ylim (min(self.ref_wave)*0.9, max(self.ref_wave)*1.1)
         self.ax_fft.set_xlim ( 0 , self.f_range )
         self.ax_fft.set_ylim ( 0 , self.amp_max )
+        self.set_x_scale(self.label)
 
     def ref_draw(self):
         self.line_refwave.set_data ( self.t_sq , self.ref_timeobj.wave )
@@ -301,8 +309,8 @@ class Simuration ():
 
 
 if __name__ == '__main__':
-    dt = 0.001
+    dt = 0.0005
     # file = 'sinwave.txt'
     file = 'ref.tif'
-    sim = Simuration ( file, dt , ps=1000, isimage=1)
+    sim = Simuration ( file, dt , ps=200, isimage=1)
     sim.run ()
