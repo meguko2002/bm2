@@ -5,6 +5,7 @@ from matplotlib.widgets import RadioButtons , RectangleSelector, Slider
 import numpy as np
 import imageanalyzer2
 import math
+import copy
 import PySimpleGUI as sg
 
 
@@ -195,9 +196,14 @@ class Simuration ():
 
     def update_cont(self, val):
         self.wave_cont = self.s_cont.val
-        self.set_initial_wave ()
-        self.ref_draw ()
-        self.sim_draw ()
+        prop_fft = self.sim_fqobj.fft /self.ref_fqobj.fft
+        self.ref_timeobj.set_wave (
+            (self.ref_wave - np.mean(self.ref_wave) ) * self.wave_cont + np.mean(self.ref_wave) )
+        self.ref_fqobj.set_f( self.ref_timeobj.fft)
+        self.sim_fqobj.set_f(prop_fft * self.ref_fqobj.fft)  # 記憶していたFFT変更比率を掛ける
+        self.sim_timeobj.set_wave ( self.sim_fqobj.inv_wave () )
+        self.ref_draw()
+        self.sim_draw()
         self.fig.canvas.draw_idle ()
 
     def ref_setting(self):
@@ -224,17 +230,18 @@ class Simuration ():
             self.ref_wave = self.original_wave[top: end]
 
     def set_initial_wave(self):
-        self.ref_timeobj.set_wavedt ( (self.ref_wave - np.mean(self.ref_wave) ) * self.wave_cont + np.mean(self.ref_wave), dt )
+        self.ref_timeobj.set_wavedt (
+            (self.ref_wave - np.mean(self.ref_wave) ) * self.wave_cont + np.mean(self.ref_wave), dt )
         self.datanum = self.ref_timeobj.n
         self.ref_fqobj.set_fdf ( self.ref_timeobj.fft , self.ref_timeobj.df )
-        self.sim_fqobj = self.ref_fqobj
+        self.sim_fqobj = copy.copy(self.ref_fqobj)
         self.sim_timeobj.set_wavedt ( self.sim_fqobj.inv_wave () , dt )
         self.t_sq = self.ref_timeobj.t_sq
         self.fq_sq = self.ref_fqobj.fq_sq
 
     def set_initial_axis(self):
         self.ax_wave.set_xlim ( 0 , self.datanum * self.ref_timeobj.dt )
-        self.ax_wave.set_ylim (min(self.ref_wave)*0.9, max(self.ref_wave)*1.1)
+        self.ax_wave.set_ylim (min(self.ref_wave)*0.95, max(self.ref_wave)*1.05)
         self.ax_fft.set_xlim ( 0 , self.f_range )
         self.ax_fft.set_ylim ( 0 , self.amp_max )
         self.set_x_scale(self.label)
