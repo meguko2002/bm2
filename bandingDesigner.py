@@ -44,7 +44,6 @@ class Simuration ():
         self.sim_timeobj = imageanalyzer2.Time ()
         self.ref_fqobj = imageanalyzer2.Freq ()
         self.sim_fqobj = imageanalyzer2.Freq ()
-        self.pre_fft = None
         self.ref_wave = None
         self.t_sq = self.ref_timeobj.t_sq
         self.fq_sq = self.ref_fqobj.fq_sq
@@ -168,12 +167,11 @@ class Simuration ():
                 self.sim_fqobj.set_f ( self.ref_timeobj.fft )
                 self.sim_draw ()
                 self.fig.canvas.draw ()
-
             elif event.button == 3:  # undo
-                tmp_fft = self.sim_fqobj.fft
-                self.sim_fqobj.set_f ( self.pre_fft )
-                self.pre_fft = tmp_fft
+                pre_filter = 1 / self.filter
+                self.sim_fqobj.set_f(pre_filter * self.sim_fqobj.fft)
                 self.sim_timeobj.set_wavedt ( self.sim_fqobj.inv_wave () , dt )
+                self.filter = pre_filter
                 self.sim_draw ()
                 self.fig.canvas.draw ()
 
@@ -258,19 +256,19 @@ class Simuration ():
         self.ax_sim_image.imshow ( self.sim_timeobj.image ( 1 ) , 'gray' , vmin=0 , vmax=255 , aspect='auto' )
 
     def fft_change(self):
-        self.pre_fft = self.sim_fqobj.fft
-        self.fft_filter ()
-        self.sim_fqobj.set_f ( self.pre_fft * self.filter )
+        self.pre_prop_fft = self.sim_fqobj.fft / self.ref_fqobj.fft
+        self.set_fft_filter ()
+        self.sim_fqobj.set_f ( self.sim_fqobj.fft * self.filter )
         self.sim_timeobj.set_wavedt ( self.sim_fqobj.inv_wave () , dt )
         self.line_simwave.set_data ( self.t_sq , self.sim_timeobj.wave )
         self.line_simfft.set_data ( self.fq_sq , self.sim_fqobj.fft_abs )
         self.ax_sim_image.imshow ( self.sim_timeobj.image ( 1 ) , 'gray' , vmin=0 , vmax=255 , aspect='auto' )
 
-    def fft_filter(self):
+    def set_fft_filter(self):
+        self.filter = np.ones ( self.datanum)
         prop = self.y_b / self.y_a
         out_freq = max ( self.x_a , self.x_b )
         in_freq = min ( self.x_a , self.x_b )
-        self.filter = np.ones ( self.datanum)
         if in_freq > out_freq:
             tmp = in_freq
             in_freq = out_freq
