@@ -79,6 +79,10 @@ class Simuration ():
         self.ax_original_data.set_title ( 'original image' )
         self.ax_ref_image.set_title ( 'ref image' )
         self.ax_sim_image.set_title ( 'sim image' )
+        self.ax_ref_image.set_yticks([])
+        self.ax_sim_image.set_yticks([])
+        self.ax_ref_image.set_xticks([])
+        self.ax_sim_image.set_xticks([])
         for spine in ('left' , 'right' , 'top' , 'bottom'):
             self.ax_ref_image.spines[spine].set_color ( "g" )
             self.ax_ref_image.spines[spine].set_linewidth ( 1 )
