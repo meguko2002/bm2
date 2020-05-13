@@ -6,7 +6,7 @@ import numpy as np
 import imageanalyzer2
 import math
 import copy
-import PySimpleGUI as sg
+# import PySimpleGUI as sg
 
 
 def division_quotient(max_num):
@@ -30,7 +30,7 @@ def division_quotient(max_num):
     return delta
 
 
-class Simuration ():
+class Simulation ():
     def __init__(self , file , dt , ps=200, isimage=True):
         self.file = file
         self.dt = dt
@@ -122,7 +122,7 @@ class Simuration ():
             dq = division_quotient ( max_data_num )
             delta_pix = int( dq / self.dt )
         elif self.label == 'mm':
-            max_data_num = data_num * dt * self.ps
+            max_data_num = data_num * self.dt * self.ps
             dq = division_quotient ( max_data_num )
             delta_pix = int ( dq / self.dt / self.ps )
         ticks = np.arange(0, data_num, delta_pix)
@@ -321,5 +321,5 @@ if __name__ == '__main__':
     dt = 0.0005
     # file = 'sinwave.txt'
     file = 'ref.tif'
-    sim = Simuration ( file, dt , ps=200, isimage=1)
+    sim = Simulation ( file, dt , ps=200, isimage=1)
     sim.run ()
