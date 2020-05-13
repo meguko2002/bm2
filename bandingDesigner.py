@@ -6,7 +6,7 @@ import numpy as np
 import imageanalyzer2
 import math
 import copy
-import PySimpleGUI as sg
+# import PySimpleGUI as sg
 
 
 def division_quotient(max_num):
@@ -30,7 +30,7 @@ def division_quotient(max_num):
     return delta
 
 
-class Simuration ():
+class Simulation ():
     def __init__(self , file , dt , ps=200, isimage=True):
         self.file = file
         self.dt = dt
@@ -122,7 +122,7 @@ class Simuration ():
             dq = division_quotient ( max_data_num )
             delta_pix = int( dq / self.dt )
         elif self.label == 'mm':
-            max_data_num = data_num * dt * self.ps
+            max_data_num = data_num * self.dt * self.ps
             dq = division_quotient ( max_data_num )
             delta_pix = int ( dq / self.dt / self.ps )
         ticks = np.arange(0, data_num, delta_pix)
@@ -167,14 +167,14 @@ class Simuration ():
                 self.x_a , self.y_a = event.xdata , event.ydata
                 self.selected_area = 'fft'
             elif event.button == 2:  # reset
-                self.sim_timeobj.set_wavedt ( self.ref_wave , dt )
+                self.sim_timeobj.set_wavedt ( self.ref_wave , self.dt )
                 self.sim_fqobj.set_f ( self.ref_timeobj.fft )
                 self.sim_draw ()
                 self.fig.canvas.draw ()
             elif event.button == 3:  # undo
                 pre_filter = 1 / self.filter
                 self.sim_fqobj.set_f(pre_filter * self.sim_fqobj.fft)
-                self.sim_timeobj.set_wavedt ( self.sim_fqobj.inv_wave () , dt )
+                self.sim_timeobj.set_wavedt ( self.sim_fqobj.inv_wave () , self.dt )
                 self.filter = pre_filter
                 self.sim_draw ()
                 self.fig.canvas.draw ()
@@ -233,11 +233,11 @@ class Simuration ():
 
     def set_initial_wave(self):
         self.ref_timeobj.set_wavedt (
-            (self.ref_wave - np.mean(self.ref_wave) ) * self.wave_cont + np.mean(self.ref_wave), dt )
+            (self.ref_wave - np.mean(self.ref_wave) ) * self.wave_cont + np.mean(self.ref_wave), self.dt )
         self.datanum = self.ref_timeobj.n
         self.ref_fqobj.set_fdf ( self.ref_timeobj.fft , self.ref_timeobj.df )
         self.sim_fqobj = copy.copy(self.ref_fqobj)
-        self.sim_timeobj.set_wavedt ( self.sim_fqobj.inv_wave () , dt )
+        self.sim_timeobj.set_wavedt ( self.sim_fqobj.inv_wave () , self.dt )
         self.t_sq = self.ref_timeobj.t_sq
         self.fq_sq = self.ref_fqobj.fq_sq
 
@@ -263,7 +263,7 @@ class Simuration ():
         self.pre_prop_fft = self.sim_fqobj.fft / self.ref_fqobj.fft
         self.set_fft_filter ()
         self.sim_fqobj.set_f ( self.sim_fqobj.fft * self.filter )
-        self.sim_timeobj.set_wavedt ( self.sim_fqobj.inv_wave () , dt )
+        self.sim_timeobj.set_wavedt ( self.sim_fqobj.inv_wave () , self.dt )
         self.line_simwave.set_data ( self.t_sq , self.sim_timeobj.wave )
         self.line_simfft.set_data ( self.fq_sq , self.sim_fqobj.fft_abs )
         self.ax_sim_image.imshow ( self.sim_timeobj.image ( 1 ) , 'gray' , vmin=0 , vmax=255 , aspect='auto' )
@@ -321,5 +321,5 @@ if __name__ == '__main__':
     dt = 0.0005
     # file = 'sinwave.txt'
     file = 'ref.tif'
-    sim = Simuration ( file, dt , ps=200, isimage=1)
+    sim = Simulation ( file, dt , ps=200, isimage=1)
     sim.run ()
